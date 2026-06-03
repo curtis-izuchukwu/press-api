@@ -1,26 +1,40 @@
-# FlightDeck-API
-A serverless Cloudflare Workers API that generates structured revision material from topic, difficulty, and question-count inputs. Built as the AI-powered content engine behind StudyPilot, with validation, caching, and integration-ready JSON output.
+# FlightDeck API
 
-## Purpose
-The service will eventually accept a topic, difficulty, and question count, then return structured revision material as JSON.
+FlightDeck API is a small serverless REST API built with Cloudflare Workers and TypeScript. It provides structured revision-material endpoints for study tools and will later support PararePilot, an adaptive study tracker.
 
-## Planned Features
-- Health-check endpoint
-- Worksheet/revision material generation endpoint
-- Input validation
-- Workers AI integration
-- Structured JSON output
-- Optional caching with Workers KV
-- Optional persistence with Cloudflare D1
-- Integration with PararePilot
+## Current status
 
-## Tech Stack
+Milestone 1 complete: project foundation and health-check endpoint.
+
+## Tech stack
+
 - TypeScript
 - Cloudflare Workers
 - Wrangler
 - REST API
 
-## Local Development
-```bash
-npm install
-npm run dev
+## Endpoints
+
+### GET /health
+
+## Roadmap
+
+Add /generate endpoint
+Add request validation
+Add structured worksheet response format
+Integrate Workers AI
+Add caching with Cloudflare KV
+Add persistence with Cloudflare D1
+Add tests
+
+Returns service status metadata.
+
+Example response:
+
+```json
+{
+  "status": "ok",
+  "service": "FlightDeck API",
+  "version": "0.1.0"
+}
+
