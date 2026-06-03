@@ -1,41 +1,8 @@
-import { z } from "zod";
-
-type Difficulty = "easy" | "medium" | "hard";
-type WorksheetFormat = "short-answer" | "multiple-choice" | "mixed";
-
-const generateRequestSchema = z.object({
-  subject: z.string().trim().min(1).max(80),
-  topic: z.string().trim().min(1).max(120),
-  difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
-  questionCount: z.number().int().min(1).max(10).default(3),
-  format: z.enum(["short-answer", "multiple-choice", "mixed"]).default("short-answer")
-});
-
-type GenerateRequest = z.infer<typeof generateRequestSchema>;
-
-type WorksheetQuestion = {
-  id: number;
-  type: "short-answer";
-  question: string;
-  answer: string;
-  markScheme: string[];
-  marks: number;
-};
-
-type WorksheetResponse = {
-  metadata: {
-    service: "FlightDeck API";
-    version: "0.1.0";
-    subject: string;
-    topic: string;
-    difficulty: Difficulty;
-    questionCount: number;
-    format: WorksheetFormat;
-    generatedAt: string;
-    mode: "static";
-  };
-  questions: WorksheetQuestion[];
-};
+import {
+  generateRequestSchema,
+  type WorksheetQuestion,
+  type WorksheetResponse
+} from "./schemas/generate";
 
 function jsonResponse(body: unknown, status = 200): Response {
   return Response.json(body, {
