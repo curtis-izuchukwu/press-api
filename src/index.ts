@@ -1,13 +1,17 @@
+import { z } from "zod";
+
 type Difficulty = "easy" | "medium" | "hard";
 type WorksheetFormat = "short-answer" | "multiple-choice" | "mixed";
 
-type GenerateRequest = {
-  subject?: string;
-  topic?: string;
-  difficulty?: Difficulty;
-  questionCount?: number;
-  format?: WorksheetFormat;
-};
+const generateRequestSchema = z.object({
+  subject: z.string().trim().min(1).max(80),
+  topic: z.string().trim().min(1).max(120),
+  difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
+  questionCount: z.number().int().min(1).max(10).default(3),
+  format: z.enum(["short-answer", "multiple-choice", "mixed"]).default("short-answer")
+});
+
+type GenerateRequest = z.infer<typeof generateRequestSchema>;
 
 type WorksheetQuestion = {
   id: number;
@@ -67,26 +71,37 @@ async function handleGenerate(request: Request): Promise<Response> {
     return methodNotAllowed("Use POST /generate");
   }
 
-  let body: GenerateRequest;
+let rawBody: unknown;
 
-  try {
-    body = await request.json<GenerateRequest>();
-  } catch {
-    return jsonResponse(
-      {
-        error: "Bad Request",
-        message: "Request body must be valid JSON"
-      },
-      400
-    );
-  }
+try {
+  rawBody = await request.json();
+} catch {
+  return jsonResponse(
+    {
+      error: "Bad Request",
+      message: "Request body must be valid JSON"
+    },
+    400
+  );
+}
 
-  const subject = body.subject ?? "Computer Science";
-  const topic = body.topic ?? "Algorithms";
-  const difficulty = body.difficulty ?? "medium";
-  const questionCount = body.questionCount ?? 3;
-  const format = body.format ?? "short-answer";
+const parsedBody = generateRequestSchema.safeParse(rawBody);
 
+if (!parsedBody.success) {
+  return jsonResponse(
+    {
+      error: "Validation Error",
+      message: "Request body does not match the expected generate format",
+      issues: parsedBody.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message
+      }))
+    },
+    400
+  );
+}
+
+const { subject, topic, difficulty, questionCount, format } = parsedBody.data;
   const questions: WorksheetQuestion[] = Array.from(
     { length: questionCount },
     (_, index) => ({
