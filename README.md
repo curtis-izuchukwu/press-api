@@ -4,6 +4,9 @@ FlightDeck API is a demo-ready serverless REST API built with **Cloudflare Worke
 
 The project is designed as a professional portfolio backend and will later support **PararePilot**, an adaptive study tracker.
 
+<img width="1463" height="856" alt="image" src="https://github.com/user-attachments/assets/382236a0-4e89-48a2-95c3-2503892c10d8" />
+
+
 ## Current status
 
 FlightDeck API is currently at **v0.1.0 demo-ready release**.
