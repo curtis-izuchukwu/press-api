@@ -14,22 +14,18 @@ type ValidationErrorResponse = ErrorResponse & {
   }>;
 };
 
+const cacheStore = new Map<string, string>();
+
 const mockEnv = {
   AI: {
-    run: async (
-      _model: string,
-      _input: {
-        prompt: string;
-        max_tokens?: number;
-        temperature?: number;
-      }
-    ) => ({
+    run: async () => ({
       response: JSON.stringify({
         question: {
           id: 1,
           type: "short-answer",
           question: "What is binary search?",
-          answer: "Binary search is an algorithm that repeatedly halves a sorted search space.",
+          answer:
+            "Binary search is an algorithm that repeatedly halves a sorted search space.",
           markScheme: [
             "Mentions sorted data.",
             "Mentions halving the search space.",
@@ -39,8 +35,17 @@ const mockEnv = {
         }
       })
     })
+  },
+  FLIGHTDECK_CACHE: {
+    get: async (key: string) => {
+      const value = cacheStore.get(key);
+      return value ? JSON.parse(value) : null;
+    },
+    put: async (key: string, value: string) => {
+      cacheStore.set(key, value);
+    }
   }
-} satisfies Env;
+} as unknown as Env;
 
 describe("FlightDeck API", () => {
   it("returns health status", async () => {

@@ -40,6 +40,7 @@ export type WorksheetResponse = {
     format: WorksheetFormat;
     generatedAt: string;
     academicLevel: "undergraduate";
-    mode: "static" | "ai" | "mixed";  };
+    mode: "static" | "ai" | "mixed";  
+    cache?: "hit" | "miss";};
   questions: WorksheetQuestion[];
 };

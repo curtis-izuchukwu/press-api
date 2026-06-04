@@ -21,6 +21,7 @@ type AiBinding = {
 
 export type Env = {
   AI: AiBinding;
+  FLIGHTDECK_CACHE: KVNamespace;
 };
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -252,6 +253,17 @@ Rules:
   };
 }
 
+async function createCacheKey(input: unknown): Promise<string> {
+  const encoded = new TextEncoder().encode(JSON.stringify(input));
+  const digest = await crypto.subtle.digest("SHA-256", encoded);
+
+  const hash = Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+
+  return `generate:${hash}`;
+}
+
 async function handleGenerate(request: Request, env: Env): Promise<Response> {
   if (request.method !== "POST") {
     return methodNotAllowed("Use POST /generate");
@@ -288,6 +300,28 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
   }
 
   const { subject, topic, difficulty, questionCount, format } = parsedBody.data;
+
+  const cacheKey = await createCacheKey({
+  subject,
+  topic,
+  difficulty,
+  questionCount,
+  format,
+  academicLevel: "undergraduate",
+  version: "0.1.0"
+  });
+
+  const cachedResponse = await env.FLIGHTDECK_CACHE.get(cacheKey, "json");
+
+  if (cachedResponse) {
+    return jsonResponse({
+      ...(cachedResponse as WorksheetResponse),
+      metadata: {
+        ...(cachedResponse as WorksheetResponse).metadata,
+        cache: "hit"
+      }
+    });
+  }
 
   const questionAngles = [
     "conceptual understanding",
@@ -343,20 +377,24 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
 
   const response: WorksheetResponse = {
     metadata: {
-      service: "FlightDeck API",
-      version: "0.1.0",
-      subject,
-      topic,
-      difficulty,
-      questionCount,
-      format,
-      generatedAt: new Date().toISOString(),
-      academicLevel: "undergraduate",
-      mode
-    },
+    service: "FlightDeck API",
+    version: "0.1.0",
+    subject,
+    topic,
+    difficulty,
+    questionCount,
+    format,
+    generatedAt: new Date().toISOString(),
+    academicLevel: "undergraduate",
+    mode,
+    cache: "miss"
+  },
     questions
   };
 
+  await env.FLIGHTDECK_CACHE.put(cacheKey, JSON.stringify(response), {
+  expirationTtl: 60 * 60
+  });
   return jsonResponse(response);
 }
 
