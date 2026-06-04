@@ -1,24 +1,27 @@
 # FlightDeck API
 
-FlightDeck API is a serverless REST API built with Cloudflare Workers and TypeScript. It generates structured undergraduate-level revision material from study inputs such as subject, topic, difficulty, question count, and format.
+FlightDeck API is a demo-ready serverless REST API built with **Cloudflare Workers** and **TypeScript**. It generates structured undergraduate-level revision worksheets from study inputs such as subject, topic, difficulty, question count, and format.
 
 The project is designed as a professional portfolio backend and will later support **PararePilot**, an adaptive study tracker.
 
 ## Current status
 
-FlightDeck API currently supports:
+FlightDeck API is currently at **v0.1.0 demo-ready release**.
+
+It currently supports:
 
 - Health check endpoint
 - Worksheet generation endpoint
 - Runtime input validation
 - Structured worksheet JSON responses
-- Workers AI integration
-- Static fallback generation if AI output fails validation
+- Workers AI-powered question generation
+- Static fallback generation when AI output fails validation
 - Cloudflare KV caching
 - Cloudflare D1 persistence
 - Worksheet history endpoint
 - Rate limiting for generation requests
 - Automated tests with Vitest
+- Simple frontend demo served through the Worker
 
 ## Tech stack
 
@@ -31,6 +34,25 @@ FlightDeck API currently supports:
 - Vitest
 - Zod
 - REST API
+- HTML/CSS/JavaScript frontend
+
+## Frontend demo
+
+FlightDeck API includes a simple frontend demo served from the Worker.
+
+The demo can:
+
+- Check API health
+- Generate worksheets from form inputs
+- Display generated questions, answers, marks, and mark schemes
+- Show metadata such as generation mode, cache status, academic level, and question count
+- Load recent worksheet history from D1
+
+Local frontend URL:
+
+```text
+http://127.0.0.1:8787/
+```
 
 ## Endpoints
 
@@ -161,6 +183,21 @@ Example response:
 
 Invalid requests return a `400` validation error.
 
+Example validation error:
+
+```json
+{
+  "error": "Validation Error",
+  "message": "Request body does not match the expected generate format",
+  "issues": [
+    {
+      "field": "topic",
+      "message": "Too small: expected string to have >=1 characters"
+    }
+  ]
+}
+```
+
 ## Rate limiting
 
 `POST /generate` is rate limited because it can call Workers AI.
@@ -176,9 +213,58 @@ When exceeded, the API returns:
 ```json
 {
   "error": "Too Many Requests",
-  "message": "Rate limit exceeded. Please try again later."
+  "message": "Rate limit exceeded. Please try again later.",
+  "rateLimit": {
+    "limit": 10,
+    "remaining": 0,
+    "resetAt": "2026-06-04T15:20:00.000Z"
+  }
 }
 ```
+
+## AI safety and fallback behaviour
+
+Workers AI responses are validated before being returned.
+
+The API rejects AI output if it contains:
+
+- Incomplete JSON
+- Missing question fields
+- Empty answers
+- Placeholder values such as `"string"`
+- Invalid mark schemes
+- Incorrect marks values
+
+If an AI-generated question fails validation, FlightDeck API replaces that question with a structured fallback question. This keeps `/generate` reliable even when the AI model returns malformed output.
+
+## Caching behaviour
+
+FlightDeck API uses Cloudflare KV for:
+
+- Generated worksheet caching
+- Rate-limit state
+
+Identical `/generate` requests can be served from cache instead of calling Workers AI again.
+
+Fresh generations return:
+
+```json
+"cache": "miss"
+```
+
+Cached generations return:
+
+```json
+"cache": "hit"
+```
+
+## Persistence behaviour
+
+FlightDeck API uses Cloudflare D1 to store worksheet history.
+
+Fresh generated worksheets are stored in D1. Cached responses do not create duplicate history records.
+
+The `/history` endpoint returns recent stored worksheet metadata.
 
 ## Local development
 
@@ -204,6 +290,12 @@ Start the local development server:
 
 ```bash
 npm run dev
+```
+
+Open the frontend:
+
+```text
+http://127.0.0.1:8787/
 ```
 
 Health check:
@@ -242,6 +334,7 @@ This project uses the following Cloudflare bindings:
 AI                 Workers AI binding
 FLIGHTDECK_CACHE   KV namespace for caching generated worksheets and rate-limit state
 DB                 D1 database for worksheet history
+ASSETS             Static asset binding for the frontend demo
 ```
 
 ## D1 migrations
@@ -258,12 +351,22 @@ If needed, execute the migration file directly:
 npx wrangler d1 execute flightdeck-db --local --file ./migrations/0001_create_worksheets.sql
 ```
 
+Verify local D1 tables:
+
+```bash
+npx wrangler d1 execute flightdeck-db --local --command "SELECT name FROM sqlite_master WHERE type='table';"
+```
+
 ## Project structure
 
 ```text
 flightdeck-api
 ├─ migrations
 │  └─ 0001_create_worksheets.sql
+├─ public
+│  ├─ index.html
+│  ├─ styles.css
+│  └─ app.js
 ├─ src
 │  ├─ index.ts
 │  └─ schemas
@@ -286,7 +389,24 @@ npm run typecheck
 npm test
 ```
 
-## Roadmap
+## Git workflow
+
+The project uses a simple feature-branch workflow:
+
+```text
+main      = stable/demo-ready version
+develop   = active integration branch
+feature/* = individual feature branches
+release/* = final release preparation branches
+```
+
+## Release status
+
+Current stable milestone:
+
+```text
+v0.1.0 = demo-ready FlightDeck API release
+```
 
 Completed:
 
@@ -298,9 +418,12 @@ Completed:
 - Structured worksheet responses
 - Vitest tests
 - Workers AI integration
+- AI fallback handling
 - KV caching
 - D1 persistence
 - Rate limiting
+- Simple frontend demo
+- Demo-ready release pass
 
 Planned:
 
@@ -308,3 +431,4 @@ Planned:
 - More detailed worksheet history retrieval
 - Optional per-question persistence
 - Deployment documentation
+- PararePilot integration
