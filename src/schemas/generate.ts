@@ -39,7 +39,7 @@ export type WorksheetResponse = {
     questionCount: number;
     format: WorksheetFormat;
     generatedAt: string;
-    mode: "static";
-  };
+    academicLevel: "undergraduate";
+    mode: "static" | "ai" | "mixed";  };
   questions: WorksheetQuestion[];
 };

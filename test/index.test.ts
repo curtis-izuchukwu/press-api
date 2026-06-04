@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import worker from "../src/index";
+import worker, { type Env } from "../src/index";
 import type { WorksheetResponse } from "../src/schemas/generate";
 
 type ErrorResponse = {
@@ -14,13 +14,41 @@ type ValidationErrorResponse = ErrorResponse & {
   }>;
 };
 
+const mockEnv = {
+  AI: {
+    run: async (
+      _model: string,
+      _input: {
+        prompt: string;
+        max_tokens?: number;
+        temperature?: number;
+      }
+    ) => ({
+      response: JSON.stringify({
+        question: {
+          id: 1,
+          type: "short-answer",
+          question: "What is binary search?",
+          answer: "Binary search is an algorithm that repeatedly halves a sorted search space.",
+          markScheme: [
+            "Mentions sorted data.",
+            "Mentions halving the search space.",
+            "Explains the purpose of finding a target value."
+          ],
+          marks: 3
+        }
+      })
+    })
+  }
+} satisfies Env;
+
 describe("FlightDeck API", () => {
   it("returns health status", async () => {
     const request = new Request("http://example.com/health", {
       method: "GET"
     });
 
-    const response = await worker.fetch(request);
+    const response = await worker.fetch(request, mockEnv);
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -36,7 +64,7 @@ describe("FlightDeck API", () => {
       method: "GET"
     });
 
-    const response = await worker.fetch(request);
+    const response = await worker.fetch(request, mockEnv);
     const body = await response.json();
 
     expect(response.status).toBe(404);
@@ -61,7 +89,7 @@ describe("FlightDeck API", () => {
       })
     });
 
-    const response = await worker.fetch(request);
+    const response = await worker.fetch(request, mockEnv);
     const body = (await response.json()) as WorksheetResponse;
 
     expect(response.status).toBe(200);
@@ -71,7 +99,8 @@ describe("FlightDeck API", () => {
     expect(body.metadata.difficulty).toBe("medium");
     expect(body.metadata.questionCount).toBe(3);
     expect(body.metadata.format).toBe("short-answer");
-    expect(body.metadata.mode).toBe("static");
+    expect(body.metadata.academicLevel).toBe("undergraduate");
+    expect(body.metadata.mode).toBe("ai");
     expect(body.questions).toHaveLength(3);
     expect(body.questions[0]).toMatchObject({
       id: 1,
@@ -95,7 +124,7 @@ describe("FlightDeck API", () => {
       })
     });
 
-    const response = await worker.fetch(request);
+    const response = await worker.fetch(request, mockEnv);
     const body = (await response.json()) as ValidationErrorResponse;
 
     expect(response.status).toBe(400);
@@ -109,7 +138,7 @@ describe("FlightDeck API", () => {
       method: "GET"
     });
 
-    const response = await worker.fetch(request);
+    const response = await worker.fetch(request, mockEnv);
     const body = (await response.json()) as ErrorResponse;
 
     expect(response.status).toBe(405);
