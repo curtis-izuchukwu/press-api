@@ -19,9 +19,57 @@ type AiBinding = {
   ): Promise<WorkersAiTextResponse>;
 };
 
+type WorksheetHistoryRow = {
+  id: string;
+  subject: string;
+  topic: string;
+  difficulty: string;
+  question_count: number;
+  format: string;
+  academic_level: string;
+  mode: string;
+  cache_status: string;
+  created_at: string;
+};
+
+async function handleHistory(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "GET") {
+    return methodNotAllowed("Use GET /history");
+  }
+
+  const result = await env.DB.prepare(
+    `
+    SELECT
+      id,
+      subject,
+      topic,
+      difficulty,
+      question_count,
+      format,
+      academic_level,
+      mode,
+      cache_status,
+      created_at
+    FROM worksheets
+    ORDER BY created_at DESC
+    LIMIT 20
+    `
+  ).all<WorksheetHistoryRow>();
+
+  return jsonResponse({
+    metadata: {
+      service: "FlightDeck API",
+      version: "0.1.0",
+      count: result.results.length
+    },
+    worksheets: result.results
+  });
+}
+
 export type Env = {
   AI: AiBinding;
   FLIGHTDECK_CACHE: KVNamespace;
+  DB: D1Database;
 };
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -264,6 +312,50 @@ async function createCacheKey(input: unknown): Promise<string> {
   return `generate:${hash}`;
 }
 
+function createWorksheetId(): string {
+  return crypto.randomUUID();
+}
+
+async function persistWorksheet(
+  env: Env,
+  response: WorksheetResponse
+): Promise<void> {
+  const worksheetId = createWorksheetId();
+
+  await env.DB.prepare(
+    `
+    INSERT INTO worksheets (
+      id,
+      subject,
+      topic,
+      difficulty,
+      question_count,
+      format,
+      academic_level,
+      mode,
+      cache_status,
+      response_json,
+      created_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `
+  )
+    .bind(
+      worksheetId,
+      response.metadata.subject,
+      response.metadata.topic,
+      response.metadata.difficulty,
+      response.metadata.questionCount,
+      response.metadata.format,
+      response.metadata.academicLevel,
+      response.metadata.mode,
+      response.metadata.cache ?? "miss",
+      JSON.stringify(response),
+      response.metadata.generatedAt
+    )
+    .run();
+}
+
 async function handleGenerate(request: Request, env: Env): Promise<Response> {
   if (request.method !== "POST") {
     return methodNotAllowed("Use POST /generate");
@@ -393,8 +485,11 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
   };
 
   await env.FLIGHTDECK_CACHE.put(cacheKey, JSON.stringify(response), {
-  expirationTtl: 60 * 60
+    expirationTtl: 60 * 60
   });
+
+  await persistWorksheet(env, response);
+
   return jsonResponse(response);
 }
 
@@ -416,6 +511,10 @@ export default {
 
     if (url.pathname === "/generate") {
       return handleGenerate(request, env);
+    }
+
+    if (url.pathname === "/history") {
+      return handleHistory(request, env);
     }
 
     return notFound();

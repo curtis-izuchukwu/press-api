@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import worker, { type Env } from "../src/index";
 import type { WorksheetResponse } from "../src/schemas/generate";
 
@@ -15,6 +15,12 @@ type ValidationErrorResponse = ErrorResponse & {
 };
 
 const cacheStore = new Map<string, string>();
+const persistedWorksheets: unknown[] = [];
+
+beforeEach(() => {
+  cacheStore.clear();
+  persistedWorksheets.length = 0;
+});
 
 const mockEnv = {
   AI: {
@@ -36,6 +42,7 @@ const mockEnv = {
       })
     })
   },
+
   FLIGHTDECK_CACHE: {
     get: async (key: string) => {
       const value = cacheStore.get(key);
@@ -44,6 +51,26 @@ const mockEnv = {
     put: async (key: string, value: string) => {
       cacheStore.set(key, value);
     }
+  },
+
+  DB: {
+    prepare: () => ({
+      bind: (...values: unknown[]) => ({
+        run: async () => {
+          persistedWorksheets.push(values);
+
+          return {
+            success: true,
+            meta: {}
+          };
+        }
+      }),
+      all: async () => ({
+        results: [],
+        success: true,
+        meta: {}
+      })
+    })
   }
 } as unknown as Env;
 
