@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FlightDeck API Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero">
+        <p class="eyebrow">Cloudflare Workers · TypeScript · Workers AI</p>
+        <h1>FlightDeck API</h1>
+        <p class="hero-copy">
+          Generate structured undergraduate-level revision worksheets from
+          study inputs. Built as a serverless backend for PararePilot.
+        </p>
+
+        <div class="status-card">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Checking API status...</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">POST /generate</p>
+            <h2>Create a worksheet</h2>
+          </div>
+          <button id="history-button" type="button">Load history</button>
+        </div>
+
+        <form id="generate-form" class="form-grid">
+          <label>
+            Subject
+            <input
+              id="subject"
+              name="subject"
+              type="text"
+              value="Computer Science"
+              required
+            />
+          </label>
+
+          <label>
+            Topic
+            <input
+              id="topic"
+              name="topic"
+              type="text"
+              value="Binary Search"
+              required
+            />
+          </label>
+
+          <label>
+            Difficulty
+            <select id="difficulty" name="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+
+          <label>
+            Question count
+            <input
+              id="questionCount"
+              name="questionCount"
+              type="number"
+              value="3"
+              min="1"
+              max="10"
+              required
+            />
+          </label>
+
+          <label>
+            Format
+            <select id="format" name="format">
+              <option value="short-answer" selected>Short answer</option>
+              <option value="multiple-choice">Multiple choice</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </label>
+
+          <button class="primary-button" type="submit">
+            Generate worksheet
+          </button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Response</p>
+            <h2>Worksheet output</h2>
+          </div>
+          <div id="metadata" class="metadata"></div>
+        </div>
+
+        <div id="error-box" class="error-box hidden"></div>
+        <div id="questions" class="questions empty-state">
+          Submit the form to generate a worksheet.
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">GET /history</p>
+            <h2>Recent worksheets</h2>
+          </div>
+        </div>
+
+        <div id="history" class="history empty-state">
+          Click “Load history” to view stored worksheet records.
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

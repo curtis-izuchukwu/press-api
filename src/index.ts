@@ -73,6 +73,8 @@ export type Env = {
   AI: AiBinding;
   FLIGHTDECK_CACHE: KVNamespace;
   DB: D1Database;
+  ASSETS: Fetcher;
+
 };
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -153,6 +155,18 @@ function extractFirstJsonObject(text: string): string {
   throw new Error("AI response contained incomplete JSON");
 }
 
+function isPlaceholderText(value: string): boolean {
+  const normalised = value.trim().toLowerCase();
+
+  return (
+    normalised === "string" ||
+    normalised === "answer" ||
+    normalised === "question" ||
+    normalised === "n/a" ||
+    normalised === "placeholder"
+  );
+}
+
 function isWorksheetQuestion(value: unknown): value is WorksheetQuestion {
   if (typeof value !== "object" || value === null) {
     return false;
@@ -165,12 +179,17 @@ function isWorksheetQuestion(value: unknown): value is WorksheetQuestion {
     question.type === "short-answer" &&
     typeof question.question === "string" &&
     question.question.trim().length > 0 &&
+    !isPlaceholderText(question.question) &&
     typeof question.answer === "string" &&
     question.answer.trim().length > 0 &&
+    !isPlaceholderText(question.answer) &&
     Array.isArray(question.markScheme) &&
     question.markScheme.length === 3 &&
     question.markScheme.every(
-      (point) => typeof point === "string" && point.trim().length > 0
+      (point) =>
+        typeof point === "string" &&
+        point.trim().length > 0 &&
+        !isPlaceholderText(point)
     ) &&
     question.marks === 3
   );
@@ -276,6 +295,8 @@ Rules:
 - The markScheme must contain exactly 3 short marking points.
 - The marks value must be 3.
 - Avoid generic repeated questions such as only asking for the time complexity.
+- Do not use placeholder values such as "string", "answer", "question", or empty text.
+- The answer must directly answer the generated question.
 `;
 
   const aiResult = await env.AI.run("@cf/meta/llama-3.2-3b-instruct", {
@@ -427,8 +448,12 @@ async function checkRateLimit(
     resetAt: existingState.resetAt
   };
 
+  const remainingWindowSeconds = Math.ceil(
+    (existingState.resetAt - now) / 1000
+  );
+
   await env.FLIGHTDECK_CACHE.put(options.key, JSON.stringify(updatedState), {
-    expirationTtl: Math.ceil((existingState.resetAt - now) / 1000)
+    expirationTtl: Math.max(60, remainingWindowSeconds)
   });
 
   return {
@@ -610,7 +635,11 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
     expirationTtl: 60 * 60
   });
 
-  await persistWorksheet(env, response);
+  try {
+    await persistWorksheet(env, response);
+  } catch (error) {
+    console.error("D1 persistence failed:", error);
+  }
 
   return jsonResponse(response);
 }
@@ -637,6 +666,13 @@ export default {
 
     if (url.pathname === "/history") {
       return handleHistory(request, env);
+    }
+
+    if (
+      request.method === "GET" &&
+      ["/", "/index.html", "/styles.css", "/app.js"].includes(url.pathname)
+    ) {
+      return env.ASSETS.fetch(request);
     }
 
     return notFound();

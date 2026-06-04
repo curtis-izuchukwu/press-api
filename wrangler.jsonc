@@ -1,23 +1,27 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "flightdeck-api",
-	"main": "src/index.ts",
-	"compatibility_date": "2026-06-01",
-	"ai": {
-		"binding": "AI",
-		"remote": true
-	},
-	"kv_namespaces": [
-		{
-			"binding": "FLIGHTDECK_CACHE",
-			"id": "b1db41ec645b4457a296dbdb7d067b9b"
-		}
-	],
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "flightdeck-db",
-			"database_id": "6e4deb4e-13e6-46ec-b43f-a513e6e64a5f"
-		}
-	]
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "flightdeck-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-01",
+  "ai": {
+    "binding": "AI",
+    "remote": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "FLIGHTDECK_CACHE",
+      "id": "YOUR_KV_NAMESPACE_ID"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "flightdeck-db",
+      "database_id": "YOUR_D1_DATABASE_ID"
+    }
+  ],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  }
 }

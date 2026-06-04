@@ -1,0 +1,261 @@
+:root {
+  color-scheme: dark;
+  --background: #080b12;
+  --panel: #111827;
+  --panel-light: #172033;
+  --border: #2d3748;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-strong: #0ea5e9;
+  --danger: #fb7185;
+  --success: #34d399;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 32rem),
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.16), transparent 30rem),
+    var(--background);
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.page-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.hero {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  line-height: 1.05;
+}
+
+h1 {
+  font-size: clamp(2.8rem, 8vw, 5.5rem);
+  letter-spacing: -0.07em;
+}
+
+h2 {
+  font-size: 1.35rem;
+}
+
+.hero-copy {
+  max-width: 720px;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.status-card,
+.panel {
+  border: 1px solid var(--border);
+  background: rgba(17, 24, 39, 0.82);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(16px);
+}
+
+.status-card {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+
+.status-dot.ok {
+  background: var(--success);
+  box-shadow: 0 0 18px var(--success);
+}
+
+.status-dot.error {
+  background: var(--danger);
+  box-shadow: 0 0 18px var(--danger);
+}
+
+.panel {
+  margin-top: 20px;
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.panel-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel-light);
+  color: var(--text);
+  padding: 12px 14px;
+  outline: none;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.primary-button {
+  align-self: end;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #03101a;
+  padding: 13px 18px;
+}
+
+#history-button {
+  background: var(--panel-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+}
+
+.metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.badge {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: var(--panel-light);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.questions,
+.history {
+  display: grid;
+  gap: 14px;
+}
+
+.question-card,
+.history-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(23, 32, 51, 0.84);
+  padding: 18px;
+}
+
+.question-card h3,
+.history-card h3 {
+  margin: 0 0 10px;
+}
+
+.question-card p,
+.history-card p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.mark-scheme {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.mark-scheme li {
+  margin: 6px 0;
+}
+
+.empty-state {
+  color: var(--muted);
+}
+
+.error-box {
+  margin-bottom: 16px;
+  border: 1px solid rgba(251, 113, 133, 0.5);
+  border-radius: 16px;
+  background: rgba(251, 113, 133, 0.12);
+  color: #fecdd3;
+  padding: 14px;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-header {
+    flex-direction: column;
+  }
+
+  .metadata {
+    justify-content: flex-start;
+  }
+}
