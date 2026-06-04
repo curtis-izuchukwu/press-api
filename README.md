@@ -304,7 +304,6 @@ Completed:
 
 Planned:
 
-- Simple frontend demo
 - Better AI prompt quality controls
 - More detailed worksheet history retrieval
 - Optional per-question persistence
