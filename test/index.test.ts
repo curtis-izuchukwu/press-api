@@ -110,7 +110,8 @@ describe("FlightDeck API", () => {
     const request = new Request("http://example.com/generate", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "CF-Connecting-IP": "127.0.0.1"
       },
       body: JSON.stringify({
         subject: "Computer Science",
@@ -178,5 +179,35 @@ describe("FlightDeck API", () => {
       error: "Method Not Allowed",
       message: "Use POST /generate"
     });
+  });
+
+  it("rate limits generate requests", async () => {
+    const requestBody = {
+      subject: "Computer Science",
+      topic: "Binary Search",
+      difficulty: "medium",
+      questionCount: 3,
+      format: "short-answer"
+    };
+
+    let lastResponse: Response | undefined;
+
+    for (let index = 0; index < 11; index++) {
+      const request = new Request("http://example.com/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CF-Connecting-IP": "203.0.113.10"
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      lastResponse = await worker.fetch(request, mockEnv);
+    }
+
+    const body = (await lastResponse!.json()) as ErrorResponse;
+
+    expect(lastResponse!.status).toBe(429);
+    expect(body.error).toBe("Too Many Requests");
   });
 });

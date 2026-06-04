@@ -32,6 +32,9 @@ type WorksheetHistoryRow = {
   created_at: string;
 };
 
+const GENERATE_RATE_LIMIT_MAX_REQUESTS = 10;
+const GENERATE_RATE_LIMIT_WINDOW_SECONDS = 60;
+
 async function handleHistory(request: Request, env: Env): Promise<Response> {
   if (request.method !== "GET") {
     return methodNotAllowed("Use GET /history");
@@ -356,9 +359,128 @@ async function persistWorksheet(
     .run();
 }
 
+type RateLimitState = {
+  count: number;
+  resetAt: number;
+};
+
+type RateLimitResult = {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  resetAt: number;
+};
+
+function getClientIp(request: Request): string {
+  return (
+    request.headers.get("CF-Connecting-IP") ??
+    request.headers.get("X-Forwarded-For") ??
+    "unknown"
+  );
+}
+
+async function checkRateLimit(
+  env: Env,
+  options: {
+    key: string;
+    limit: number;
+    windowSeconds: number;
+  }
+): Promise<RateLimitResult> {
+  const now = Date.now();
+  const resetAt = now + options.windowSeconds * 1000;
+
+  const existingState = await env.FLIGHTDECK_CACHE.get<RateLimitState>(
+    options.key,
+    "json"
+  );
+
+  if (!existingState || existingState.resetAt <= now) {
+    const newState: RateLimitState = {
+      count: 1,
+      resetAt
+    };
+
+    await env.FLIGHTDECK_CACHE.put(options.key, JSON.stringify(newState), {
+      expirationTtl: options.windowSeconds
+    });
+
+    return {
+      allowed: true,
+      limit: options.limit,
+      remaining: options.limit - 1,
+      resetAt
+    };
+  }
+
+  if (existingState.count >= options.limit) {
+    return {
+      allowed: false,
+      limit: options.limit,
+      remaining: 0,
+      resetAt: existingState.resetAt
+    };
+  }
+
+  const updatedState: RateLimitState = {
+    count: existingState.count + 1,
+    resetAt: existingState.resetAt
+  };
+
+  await env.FLIGHTDECK_CACHE.put(options.key, JSON.stringify(updatedState), {
+    expirationTtl: Math.ceil((existingState.resetAt - now) / 1000)
+  });
+
+  return {
+    allowed: true,
+    limit: options.limit,
+    remaining: options.limit - updatedState.count,
+    resetAt: existingState.resetAt
+  };
+}
+
+function rateLimitResponse(result: RateLimitResult): Response {
+  return Response.json(
+    {
+      error: "Too Many Requests",
+      message: "Rate limit exceeded. Please try again later.",
+      rateLimit: {
+        limit: result.limit,
+        remaining: result.remaining,
+        resetAt: new Date(result.resetAt).toISOString()
+      }
+    },
+    {
+      status: 429,
+      headers: {
+        "Content-Type": "application/json",
+        "Retry-After": Math.ceil(
+          (result.resetAt - Date.now()) / 1000
+        ).toString(),
+        "X-RateLimit-Limit": result.limit.toString(),
+        "X-RateLimit-Remaining": result.remaining.toString(),
+        "X-RateLimit-Reset": new Date(result.resetAt).toISOString()
+      }
+    }
+  );
+}
+
 async function handleGenerate(request: Request, env: Env): Promise<Response> {
   if (request.method !== "POST") {
     return methodNotAllowed("Use POST /generate");
+  }
+
+  const clientIp = getClientIp(request);
+  const rateLimitKey = `rate-limit:generate:${clientIp}`;
+
+  const rateLimit = await checkRateLimit(env, {
+    key: rateLimitKey,
+    limit: GENERATE_RATE_LIMIT_MAX_REQUESTS,
+    windowSeconds: GENERATE_RATE_LIMIT_WINDOW_SECONDS
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit);
   }
 
   let rawBody: unknown;
