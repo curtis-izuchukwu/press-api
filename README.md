@@ -2,7 +2,7 @@
 
 FlightDeck API is a demo-ready serverless REST API built with **Cloudflare Workers** and **TypeScript**. It generates structured undergraduate-level revision worksheets from study inputs such as subject, topic, difficulty, question count, and format.
 
-The project is designed as a professional portfolio backend and will later support **PararePilot**, an adaptive study tracker.
+The project is designed as a backend and will later support **PararePilot**, an adaptive study tracker.
 
 <img width="1463" height="856" alt="image" src="https://github.com/user-attachments/assets/382236a0-4e89-48a2-95c3-2503892c10d8" />
 
