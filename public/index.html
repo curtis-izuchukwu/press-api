@@ -8,116 +8,191 @@
   </head>
   <body>
     <main class="page-shell">
-      <section class="hero">
-        <p class="eyebrow">Cloudflare Workers · TypeScript · Workers AI</p>
-        <h1>FlightDeck API</h1>
-        <p class="hero-copy">
-          Generate structured undergraduate-level revision worksheets from
-          study inputs. Built as a serverless backend for PararePilot.
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="FlightDeck API home">
+          <span class="brand-mark">FD</span>
+          <span>
+            <span class="brand-title">FlightDeck API</span>
+          </span>
+        </a>
+
+        <nav class="topnav" aria-label="Workspace navigation">
+          <a href="#create-title">Workbench</a>
+          <a href="#endpoint-title">Endpoint</a>
+          <a href="#history-title">History</a>
+        </nav>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <h1 id="page-title">Generate structured revision worksheets.</h1>
+        <p>
+          Built as the worksheet engine behind PararePilot. Choose a subject,
+          topic, difficulty and format, then review the generated output.
         </p>
-
-        <div class="status-card">
-          <span class="status-dot" id="status-dot"></span>
-          <span id="status-text">Checking API status...</span>
-        </div>
       </section>
 
-      <section class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">POST /generate</p>
-            <h2>Create a worksheet</h2>
-          </div>
-          <button id="history-button" type="button">Load history</button>
+      <div class="workbench-grid">
+        <div class="main-column">
+          <section class="panel form-panel" aria-labelledby="create-title">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">POST /generate</p>
+                <h2 id="create-title">Create a worksheet</h2>
+                <p class="panel-note">
+                  Choose the study inputs for the next generation.
+                </p>
+              </div>
+            </div>
+
+            <form id="generate-form" class="form-grid">
+              <label>
+                Subject
+                <input
+                  id="subject"
+                  name="subject"
+                  type="text"
+                  value="Computer Science"
+                  required
+                />
+              </label>
+
+              <label>
+                Topic
+                <input
+                  id="topic"
+                  name="topic"
+                  type="text"
+                  value="Binary Search"
+                  required
+                />
+              </label>
+
+              <label>
+                Difficulty
+                <select id="difficulty" name="difficulty">
+                  <option value="easy">Easy</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </label>
+
+              <label>
+                Question count
+                <input
+                  id="questionCount"
+                  name="questionCount"
+                  type="number"
+                  value="3"
+                  min="1"
+                  max="10"
+                  required
+                />
+              </label>
+
+              <label>
+                Format
+                <select id="format" name="format">
+                  <option value="short-answer" selected>Short answer</option>
+                  <option value="long-answer">Long answer</option>
+                </select>
+              </label>
+
+              <button class="primary-button" type="submit">
+                Generate worksheet
+              </button>
+            </form>
+          </section>
+
+          <section class="panel output-panel" aria-labelledby="output-title">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Response</p>
+                <h2 id="output-title">Worksheet output</h2>
+              </div>
+              <div id="metadata" class="metadata"></div>
+            </div>
+
+            <div id="error-box" class="error-box hidden"></div>
+            <div id="questions" class="questions empty-state">
+              Submit the form to generate a worksheet.
+            </div>
+          </section>
         </div>
 
-        <form id="generate-form" class="form-grid">
-          <label>
-            Subject
-            <input
-              id="subject"
-              name="subject"
-              type="text"
-              value="Computer Science"
-              required
-            />
-          </label>
+        <aside class="sidebar" aria-label="API utilities">
+          <section class="panel utility-card" aria-labelledby="status-title">
+            <div class="utility-header">
+              <p class="eyebrow">Status</p>
+              <span id="version-text" class="meta-chip">v0.1.0</span>
+            </div>
+            <h2 id="status-title">System status</h2>
+            <div class="status-row" role="status" aria-live="polite">
+              <span class="status-dot" id="status-dot" aria-hidden="true"></span>
+              <span id="status-text">Checking API status...</span>
+            </div>
+            <p id="status-detail" class="fine-print">
+              Waiting for the health check response.
+            </p>
+            <dl class="metric-list">
+              <div>
+                <dt>Last checked</dt>
+                <dd id="checked-text">Pending</dd>
+              </div>
+              <div>
+                <dt>Latency</dt>
+                <dd id="latency-text">Pending</dd>
+              </div>
+            </dl>
+          </section>
 
-          <label>
-            Topic
-            <input
-              id="topic"
-              name="topic"
-              type="text"
-              value="Binary Search"
-              required
-            />
-          </label>
+          <section class="panel utility-card" aria-labelledby="endpoint-title">
+            <p class="eyebrow">Endpoint</p>
+            <h2 id="endpoint-title">Generate worksheet</h2>
+            <dl class="endpoint-details">
+              <div>
+                <dt>Method</dt>
+                <dd><code>POST</code></dd>
+              </div>
+              <div>
+                <dt>Path</dt>
+                <dd><code>/generate</code></dd>
+              </div>
+              <div>
+                <dt>URL</dt>
+                <dd><code id="endpoint-value">/generate</code></dd>
+              </div>
+            </dl>
+            <div class="endpoint-actions">
+              <button id="copy-endpoint" class="secondary-button" type="button">
+                Copy URL
+              </button>
+              <button id="copy-curl" class="secondary-button" type="button">
+                Copy cURL
+              </button>
+            </div>
+            <p class="fine-print">
+              Send JSON with subject, topic, difficulty, question count and
+              format.
+            </p>
+          </section>
 
-          <label>
-            Difficulty
-            <select id="difficulty" name="difficulty">
-              <option value="easy">Easy</option>
-              <option value="medium" selected>Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </label>
+          <section class="panel utility-card" aria-labelledby="history-title">
+            <div class="utility-header">
+              <div>
+                <p class="eyebrow">GET /history</p>
+                <h2 id="history-title">Recent generations</h2>
+              </div>
+              <button id="history-button" class="secondary-button" type="button">
+                Load
+              </button>
+            </div>
 
-          <label>
-            Question count
-            <input
-              id="questionCount"
-              name="questionCount"
-              type="number"
-              value="3"
-              min="1"
-              max="10"
-              required
-            />
-          </label>
-
-          <label>
-            Format
-            <select id="format" name="format">
-              <option value="short-answer" selected>Short answer</option>
-              <option value="multiple-choice">Multiple choice</option>
-              <option value="mixed">Mixed</option>
-            </select>
-          </label>
-
-          <button class="primary-button" type="submit">
-            Generate worksheet
-          </button>
-        </form>
-      </section>
-
-      <section class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">Response</p>
-            <h2>Worksheet output</h2>
-          </div>
-          <div id="metadata" class="metadata"></div>
-        </div>
-
-        <div id="error-box" class="error-box hidden"></div>
-        <div id="questions" class="questions empty-state">
-          Submit the form to generate a worksheet.
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-header">
-          <div>
-            <p class="eyebrow">GET /history</p>
-            <h2>Recent worksheets</h2>
-          </div>
-        </div>
-
-        <div id="history" class="history empty-state">
-          Click “Load history” to view stored worksheet records.
-        </div>
-      </section>
+            <div id="history" class="history empty-state compact-state">
+              Load history to view stored worksheet records.
+            </div>
+          </section>
+        </aside>
+      </div>
     </main>
 
     <script src="/app.js"></script>
