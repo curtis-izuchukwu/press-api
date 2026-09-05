@@ -4,8 +4,7 @@ export const difficultySchema = z.enum(["easy", "medium", "hard"]);
 
 export const worksheetFormatSchema = z.enum([
   "short-answer",
-  "multiple-choice",
-  "mixed"
+  "long-answer"
 ]);
 
 export const generateRequestSchema = z.object({
@@ -22,7 +21,7 @@ export type GenerateRequest = z.infer<typeof generateRequestSchema>;
 
 export type WorksheetQuestion = {
   id: number;
-  type: "short-answer";
+  type: WorksheetFormat;
   question: string;
   answer: string;
   markScheme: string[];

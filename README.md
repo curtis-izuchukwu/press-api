@@ -182,7 +182,7 @@ Example response:
 | `topic` | string | Required, 1–120 characters |
 | `difficulty` | string | `easy`, `medium`, or `hard` |
 | `questionCount` | number | Integer from 1 to 10 |
-| `format` | string | `short-answer`, `multiple-choice`, or `mixed` |
+| `format` | string | `short-answer` or `long-answer` |
 
 Invalid requests return a `400` validation error.
 

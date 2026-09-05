@@ -167,16 +167,44 @@ function isPlaceholderText(value: string): boolean {
   );
 }
 
+function getFormatSettings(format: string): {
+  marks: number;
+  markSchemeLength: number;
+  answerRule: string;
+  markSchemeRule: string;
+} {
+  if (format === "long-answer") {
+    return {
+      marks: 8,
+      markSchemeLength: 5,
+      answerRule:
+        "The answer must be one developed academic paragraph of 3 to 5 sentences.",
+      markSchemeRule:
+        "The markScheme must contain exactly 5 marking points covering explanation, evidence, analysis, comparison, and conclusion."
+    };
+  }
+
+  return {
+    marks: 3,
+    markSchemeLength: 3,
+    answerRule: "The answer must be one concise academic sentence.",
+    markSchemeRule: "The markScheme must contain exactly 3 short marking points."
+  };
+}
+
 function isWorksheetQuestion(value: unknown): value is WorksheetQuestion {
   if (typeof value !== "object" || value === null) {
     return false;
   }
 
   const question = value as WorksheetQuestion;
+  const validType =
+    question.type === "short-answer" || question.type === "long-answer";
+  const settings = validType ? getFormatSettings(question.type) : null;
 
   return (
     typeof question.id === "number" &&
-    question.type === "short-answer" &&
+    validType &&
     typeof question.question === "string" &&
     question.question.trim().length > 0 &&
     !isPlaceholderText(question.question) &&
@@ -184,23 +212,61 @@ function isWorksheetQuestion(value: unknown): value is WorksheetQuestion {
     question.answer.trim().length > 0 &&
     !isPlaceholderText(question.answer) &&
     Array.isArray(question.markScheme) &&
-    question.markScheme.length === 3 &&
+    question.markScheme.length === settings!.markSchemeLength &&
     question.markScheme.every(
       (point) =>
         typeof point === "string" &&
         point.trim().length > 0 &&
         !isPlaceholderText(point)
     ) &&
-    question.marks === 3
+    question.marks === settings!.marks
   );
 }
 
 function createFallbackQuestions(
   subject: string,
   topic: string,
-  questionCount: number
+  questionCount: number,
+  format = "short-answer"
 ): WorksheetQuestion[] {
-  const fallbackQuestionTemplates = [
+  const fallbackQuestionTemplates =
+    format === "long-answer"
+      ? [
+          {
+            question: `Evaluate how ${topic} works and why it matters in ${subject}.`,
+            answer: `${topic} matters in ${subject} because it provides a structured way to reason about a problem, apply core principles, and communicate a solution with precision. A strong answer should explain the underlying mechanism, identify the assumptions that make it work, and connect those details to practical use. It should also acknowledge limitations or trade-offs rather than treating the technique as universally appropriate.`,
+            markScheme: [
+              `Explains the core mechanism of ${topic}.`,
+              `Connects ${topic} to a relevant ${subject} context.`,
+              "Uses accurate undergraduate-level terminology.",
+              "Analyses at least one limitation or trade-off.",
+              "Draws a clear conclusion about its value."
+            ]
+          },
+          {
+            question: `Discuss the conditions under which ${topic} is an appropriate technique in ${subject}.`,
+            answer: `An effective answer should show that ${topic} is useful when its assumptions match the structure of the problem being solved. It should explain what those assumptions are, why they affect correctness or efficiency, and how the technique compares with a simpler approach. The discussion should make clear that choosing ${topic} is a design decision rather than a default choice.`,
+            markScheme: [
+              `Identifies conditions required for ${topic} to be appropriate.`,
+              "Explains why those conditions affect performance or correctness.",
+              "Compares the technique with a simpler alternative.",
+              "Uses a concrete example or scenario.",
+              "Justifies the final judgement clearly."
+            ]
+          },
+          {
+            question: `Analyse the main trade-offs involved in using ${topic}.`,
+            answer: `A developed answer should explain both the strengths and costs of using ${topic} in a realistic ${subject} setting. It should describe the benefit the technique offers, the constraints it introduces, and the situations where those constraints may outweigh the benefit. The answer should finish by linking the trade-off back to problem size, data structure, implementation complexity, or maintainability.`,
+            markScheme: [
+              `States a meaningful advantage of ${topic}.`,
+              "Explains a constraint, cost, or limitation.",
+              "Relates the trade-off to a realistic use case.",
+              "Shows balanced analysis rather than one-sided description.",
+              "Links the judgement to an undergraduate-level concept."
+            ]
+          }
+        ]
+      : [
     {
       question: `Explain how ${topic} works at a conceptual level.`,
       answer: `A strong answer should describe the main mechanism of ${topic} using precise ${subject} terminology.`,
@@ -228,7 +294,9 @@ function createFallbackQuestions(
         "Explains at least one meaningful trade-off."
       ]
     }
-  ];
+        ];
+
+  const settings = getFormatSettings(format);
 
   return Array.from({ length: questionCount }, (_, index) => {
     const template =
@@ -236,11 +304,11 @@ function createFallbackQuestions(
 
     return {
       id: index + 1,
-      type: "short-answer",
+      type: format === "long-answer" ? "long-answer" : "short-answer",
       question: template.question,
       answer: template.answer,
       markScheme: template.markScheme,
-      marks: 3
+      marks: settings.marks
     };
   });
 }
@@ -248,9 +316,10 @@ function createFallbackQuestions(
 function createFallbackQuestion(
   subject: string,
   topic: string,
-  id: number
+  id: number,
+  format = "short-answer"
 ): WorksheetQuestion {
-  const fallbackQuestions = createFallbackQuestions(subject, topic, id);
+  const fallbackQuestions = createFallbackQuestions(subject, topic, id, format);
   return fallbackQuestions[id - 1];
 }
 
@@ -265,6 +334,8 @@ async function generateAiQuestion(
     angle: string;
   }
 ): Promise<WorksheetQuestion> {
+  const settings = getFormatSettings(options.format);
+
   const prompt = `
 You are generating one undergraduate revision question.
 
@@ -275,11 +346,11 @@ The JSON object must use this exact shape:
 {
   "question": {
     "id": ${options.id},
-    "type": "short-answer",
+    "type": "${options.format}",
     "question": "string",
     "answer": "string",
-    "markScheme": ["string", "string", "string"],
-    "marks": 3
+    "markScheme": ${JSON.stringify(Array.from({ length: settings.markSchemeLength }, () => "string"))},
+    "marks": ${settings.marks}
   }
 }
 
@@ -291,9 +362,9 @@ Rules:
 - Question focus: ${options.angle}
 - The question must be suitable for undergraduate university degree study.
 - The question must specifically match the question focus.
-- The answer must be one concise academic sentence.
-- The markScheme must contain exactly 3 short marking points.
-- The marks value must be 3.
+- ${settings.answerRule}
+- ${settings.markSchemeRule}
+- The marks value must be ${settings.marks}.
 - Avoid generic repeated questions such as only asking for the time complexity.
 - Do not use placeholder values such as "string", "answer", "question", or empty text.
 - The answer must directly answer the generated question.
@@ -320,8 +391,8 @@ Rules:
   return {
     ...parsed.question,
     id: options.id,
-    type: "short-answer",
-    marks: 3
+    type: options.format === "long-answer" ? "long-answer" : "short-answer",
+    marks: settings.marks
   };
 }
 
@@ -541,22 +612,25 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
   const { subject, topic, difficulty, questionCount, format } = parsedBody.data;
 
   const cacheKey = await createCacheKey({
-  subject,
-  topic,
-  difficulty,
-  questionCount,
-  format,
-  academicLevel: "undergraduate",
-  version: "0.1.0"
+    subject,
+    topic,
+    difficulty,
+    questionCount,
+    format,
+    academicLevel: "undergraduate",
+    version: "0.1.0"
   });
 
-  const cachedResponse = await env.FLIGHTDECK_CACHE.get(cacheKey, "json");
+  const cachedResponse = (await env.FLIGHTDECK_CACHE.get(
+    cacheKey,
+    "json"
+  )) as WorksheetResponse | null;
 
-  if (cachedResponse) {
+  if (cachedResponse && cachedResponse.metadata.mode !== "static") {
     return jsonResponse({
-      ...(cachedResponse as WorksheetResponse),
+      ...cachedResponse,
       metadata: {
-        ...(cachedResponse as WorksheetResponse).metadata,
+        ...cachedResponse.metadata,
         cache: "hit"
       }
     });
@@ -574,6 +648,7 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
   ];
 
   const questions: WorksheetQuestion[] = [];
+  let aiQuestionCount = 0;
 
   for (let index = 0; index < questionCount; index++) {
     try {
@@ -587,22 +662,16 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
       });
 
       questions.push(question);
+      aiQuestionCount += 1;
     } catch (error) {
       console.error(
         `Workers AI generation failed for question ${index + 1}:`,
         error
       );
 
-      questions.push(createFallbackQuestion(subject, topic, index + 1));
+      questions.push(createFallbackQuestion(subject, topic, index + 1, format));
     }
   }
-
-  const aiQuestionCount = questions.filter(
-    (question) =>
-      !question.question.startsWith("Explain how") &&
-      !question.question.startsWith("Analyse why") &&
-      !question.question.startsWith("Compare")
-  ).length;
 
   let mode: "static" | "ai" | "mixed";
 
@@ -616,24 +685,26 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
 
   const response: WorksheetResponse = {
     metadata: {
-    service: "FlightDeck API",
-    version: "0.1.0",
-    subject,
-    topic,
-    difficulty,
-    questionCount,
-    format,
-    generatedAt: new Date().toISOString(),
-    academicLevel: "undergraduate",
-    mode,
-    cache: "miss"
-  },
+      service: "FlightDeck API",
+      version: "0.1.0",
+      subject,
+      topic,
+      difficulty,
+      questionCount,
+      format,
+      generatedAt: new Date().toISOString(),
+      academicLevel: "undergraduate",
+      mode,
+      cache: "miss"
+    },
     questions
   };
 
-  await env.FLIGHTDECK_CACHE.put(cacheKey, JSON.stringify(response), {
-    expirationTtl: 60 * 60
-  });
+  if (mode !== "static") {
+    await env.FLIGHTDECK_CACHE.put(cacheKey, JSON.stringify(response), {
+      expirationTtl: 60 * 60
+    });
+  }
 
   try {
     await persistWorksheet(env, response);

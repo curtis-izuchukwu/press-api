@@ -6,8 +6,17 @@ const metadataContainer = document.querySelector("#metadata");
 const errorBox = document.querySelector("#error-box");
 const historyButton = document.querySelector("#history-button");
 const historyContainer = document.querySelector("#history");
+const statusDetail = document.querySelector("#status-detail");
+const versionText = document.querySelector("#version-text");
+const checkedText = document.querySelector("#checked-text");
+const latencyText = document.querySelector("#latency-text");
+const endpointValue = document.querySelector("#endpoint-value");
+const copyEndpointButton = document.querySelector("#copy-endpoint");
+const copyCurlButton = document.querySelector("#copy-curl");
 
 async function checkHealth() {
+  const startedAt = performance.now();
+
   try {
     const response = await fetch("/health");
     const body = await response.json();
@@ -17,11 +26,63 @@ async function checkHealth() {
     }
 
     statusDot.classList.add("ok");
-    statusText.textContent = `${body.service} is online`;
+    statusText.textContent = "Operational";
+    statusDetail.textContent = `${body.service} is online.`;
+    versionText.textContent = body.version ? `v${body.version}` : "Version unavailable";
+    checkedText.textContent = "Just now";
+    latencyText.textContent = `${Math.round(performance.now() - startedAt)}ms`;
   } catch (error) {
     statusDot.classList.add("error");
     statusText.textContent = "API unavailable";
+    statusDetail.textContent = "The health check did not complete.";
+    checkedText.textContent = "Just now";
+    latencyText.textContent = "Unavailable";
   }
+}
+
+async function copyText(button, text, successLabel, defaultLabel) {
+  try {
+    await navigator.clipboard.writeText(text);
+    button.textContent = successLabel;
+    window.setTimeout(() => {
+      button.textContent = defaultLabel;
+    }, 1500);
+  } catch (error) {
+    button.textContent = "Copy failed";
+  }
+}
+
+function getCurrentRequestBody() {
+  const formData = new FormData(form);
+
+  return {
+    subject: String(formData.get("subject")),
+    topic: String(formData.get("topic")),
+    difficulty: String(formData.get("difficulty")),
+    questionCount: Number(formData.get("questionCount")),
+    format: String(formData.get("format"))
+  };
+}
+
+async function copyEndpoint() {
+  const endpoint = endpointValue.textContent ?? "";
+
+  await copyText(
+    copyEndpointButton,
+    endpoint,
+    "Copied",
+    "Copy URL"
+  );
+}
+
+async function copyCurl() {
+  const endpoint = endpointValue.textContent ?? "";
+  const payload = JSON.stringify(getCurrentRequestBody(), null, 2);
+  const command = `curl -X POST "${endpoint}" \\
+  -H "Content-Type: application/json" \\
+  -d '${payload}'`;
+
+  await copyText(copyCurlButton, command, "Copied", "Copy cURL");
 }
 
 function showError(message) {
@@ -91,15 +152,7 @@ async function generateWorksheet(event) {
   event.preventDefault();
   clearError();
 
-  const formData = new FormData(form);
-
-  const requestBody = {
-    subject: String(formData.get("subject")),
-    topic: String(formData.get("topic")),
-    difficulty: String(formData.get("difficulty")),
-    questionCount: Number(formData.get("questionCount")),
-    format: String(formData.get("format"))
-  };
+  const requestBody = getCurrentRequestBody();
 
   questionsContainer.classList.add("empty-state");
   questionsContainer.textContent = "Generating worksheet...";
@@ -156,7 +209,7 @@ async function loadHistory() {
       title.textContent = worksheet.topic;
 
       const details = document.createElement("p");
-      details.textContent = `${worksheet.subject} · ${worksheet.difficulty} · ${worksheet.question_count} questions`;
+      details.textContent = `${worksheet.subject} / ${worksheet.difficulty} / ${worksheet.question_count} questions`;
 
       const badges = document.createElement("div");
       badges.className = "metadata";
@@ -182,5 +235,8 @@ async function loadHistory() {
 
 form.addEventListener("submit", generateWorksheet);
 historyButton.addEventListener("click", loadHistory);
+endpointValue.textContent = `${window.location.origin}/generate`;
+copyEndpointButton.addEventListener("click", copyEndpoint);
+copyCurlButton.addEventListener("click", copyCurl);
 
 checkHealth();

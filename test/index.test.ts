@@ -142,6 +142,62 @@ describe("FlightDeck API", () => {
     });
   });
 
+  it("generates long-answer worksheet questions", async () => {
+    const longAnswerEnv = {
+      ...mockEnv,
+      AI: {
+        run: async () => ({
+          response: JSON.stringify({
+            question: {
+              id: 1,
+              type: "long-answer",
+              question:
+                "Evaluate the role of binary search in efficient algorithm design.",
+              answer:
+                "Binary search is important because it reduces the search space by half after each comparison, which gives it logarithmic time complexity on sorted data. This makes it substantially more efficient than linear search for large datasets. However, it depends on the data being sorted and can be less appropriate when insertion order changes frequently. A strong implementation choice therefore depends on the structure and stability of the data.",
+              markScheme: [
+                "Explains the halving process.",
+                "Connects the method to logarithmic time complexity.",
+                "States the sorted-data requirement.",
+                "Compares the approach with a simpler alternative.",
+                "Evaluates when the technique is appropriate."
+              ],
+              marks: 8
+            }
+          })
+        })
+      }
+    } as unknown as Env;
+
+    const request = new Request("http://example.com/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "CF-Connecting-IP": "127.0.0.2"
+      },
+      body: JSON.stringify({
+        subject: "Computer Science",
+        topic: "Binary Search",
+        difficulty: "medium",
+        questionCount: 2,
+        format: "long-answer"
+      })
+    });
+
+    const response = await worker.fetch(request, longAnswerEnv);
+    const body = (await response.json()) as WorksheetResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.metadata.format).toBe("long-answer");
+    expect(body.metadata.mode).toBe("ai");
+    expect(body.questions).toHaveLength(2);
+    expect(body.questions[0]).toMatchObject({
+      type: "long-answer",
+      marks: 8
+    });
+    expect(body.questions[0].markScheme).toHaveLength(5);
+  });
+
   it("rejects invalid generate input", async () => {
     const request = new Request("http://example.com/generate", {
       method: "POST",
@@ -166,6 +222,28 @@ describe("FlightDeck API", () => {
     expect(body.issues.length).toBeGreaterThan(0);
   });
 
+  it("rejects removed worksheet formats", async () => {
+    const request = new Request("http://example.com/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        subject: "Computer Science",
+        topic: "Binary Search",
+        difficulty: "medium",
+        questionCount: 3,
+        format: "multiple-choice"
+      })
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+    const body = (await response.json()) as ValidationErrorResponse;
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("Validation Error");
+  });
+
   it("rejects GET requests to generate", async () => {
     const request = new Request("http://example.com/generate", {
       method: "GET"
@@ -179,6 +257,45 @@ describe("FlightDeck API", () => {
       error: "Method Not Allowed",
       message: "Use POST /generate"
     });
+  });
+
+  it("does not cache static fallback responses", async () => {
+    const staticFallbackEnv = {
+      ...mockEnv,
+      AI: {
+        run: async () => {
+          throw new Error("AI unavailable");
+        }
+      }
+    } as unknown as Env;
+
+    const requestBody = {
+      subject: "Computer Science",
+      topic: "Binary Search",
+      difficulty: "medium",
+      questionCount: 3,
+      format: "short-answer"
+    };
+
+    const createRequest = () =>
+      new Request("http://example.com/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CF-Connecting-IP": "198.51.100.20"
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+    const firstResponse = await worker.fetch(createRequest(), staticFallbackEnv);
+    const firstBody = (await firstResponse.json()) as WorksheetResponse;
+    const secondResponse = await worker.fetch(createRequest(), staticFallbackEnv);
+    const secondBody = (await secondResponse.json()) as WorksheetResponse;
+
+    expect(firstBody.metadata.mode).toBe("static");
+    expect(firstBody.metadata.cache).toBe("miss");
+    expect(secondBody.metadata.mode).toBe("static");
+    expect(secondBody.metadata.cache).toBe("miss");
   });
 
   it("rate limits generate requests", async () => {
