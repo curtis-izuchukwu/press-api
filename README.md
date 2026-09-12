@@ -1,14 +1,16 @@
-# FlightDeck API
+# Press API
 
-FlightDeck API is a demo-ready serverless REST API built with **Cloudflare Workers** and **TypeScript**. It generates structured undergraduate-level revision worksheets from study inputs such as subject, topic, difficulty, question count, and format.
+<p align="center">
+  <img src="./public/icon-192x192.png" alt="Press API icon" width="96" height="96" />
+</p>
 
-The project is designed as a backend and will later support **PararePilot**, an adaptive study tracker.
+Press API is a demo-ready serverless REST API built with **Cloudflare Workers** and **TypeScript**. It generates structured undergraduate-level revision worksheets from study inputs such as subject, topic, difficulty, question count, and format.
 
-<img width="1917" height="867" alt="image" src="https://github.com/user-attachments/assets/a06aaa69-b6ef-4a11-9048-fbee7b7effec" />
+The project is designed as a backend and will later support **Commonplace**, an adaptive study tracker.
 
 ## Current status
 
-FlightDeck API is currently at **v0.1.0 demo-ready release**.
+Press API is currently at **v0.1.0 demo-ready release**.
 
 It currently supports:
 
@@ -40,7 +42,7 @@ It currently supports:
 
 ## Frontend demo
 
-FlightDeck API includes a simple frontend demo served from the Worker.
+Press API includes a simple frontend demo served from the Worker.
 
 The demo can:
 
@@ -67,7 +69,7 @@ Example response:
 ```json
 {
   "status": "ok",
-  "service": "FlightDeck API",
+  "service": "Press API",
   "version": "0.1.0"
 }
 ```
@@ -95,7 +97,7 @@ Example response:
 ```json
 {
   "metadata": {
-    "service": "FlightDeck API",
+    "service": "Press API",
     "version": "0.1.0",
     "subject": "Computer Science",
     "topic": "Binary Search",
@@ -150,7 +152,7 @@ Example response:
 ```json
 {
   "metadata": {
-    "service": "FlightDeck API",
+    "service": "Press API",
     "version": "0.1.0",
     "count": 1
   },
@@ -237,11 +239,11 @@ The API rejects AI output if it contains:
 - Invalid mark schemes
 - Incorrect marks values
 
-If an AI-generated question fails validation, FlightDeck API replaces that question with a structured fallback question. This keeps `/generate` reliable even when the AI model returns malformed output.
+If an AI-generated question fails validation, Press API replaces that question with a structured fallback question. This keeps `/generate` reliable even when the AI model returns malformed output.
 
 ## Caching behaviour
 
-FlightDeck API uses Cloudflare KV for:
+Press API uses Cloudflare KV for:
 
 - Generated worksheet caching
 - Rate-limit state
@@ -262,7 +264,7 @@ Cached generations return:
 
 ## Persistence behaviour
 
-FlightDeck API uses Cloudflare D1 to store worksheet history.
+Press API uses Cloudflare D1 to store worksheet history.
 
 Fresh generated worksheets are stored in D1. Cached responses do not create duplicate history records.
 
@@ -279,6 +281,7 @@ npm install
 Run type checking:
 
 ```bash
+npm run types
 npm run typecheck
 ```
 
@@ -334,7 +337,7 @@ This project uses the following Cloudflare bindings:
 
 ```text
 AI                 Workers AI binding
-FLIGHTDECK_CACHE   KV namespace for caching generated worksheets and rate-limit state
+PRESS_API_CACHE    KV namespace for caching generated worksheets and rate-limit state
 DB                 D1 database for worksheet history
 ASSETS             Static asset binding for the frontend demo
 ```
@@ -344,25 +347,25 @@ ASSETS             Static asset binding for the frontend demo
 Apply local migrations:
 
 ```bash
-npx wrangler d1 migrations apply flightdeck-db --local
+npx wrangler d1 migrations apply press-api-db --local
 ```
 
 If needed, execute the migration file directly:
 
 ```bash
-npx wrangler d1 execute flightdeck-db --local --file ./migrations/0001_create_worksheets.sql
+npx wrangler d1 execute press-api-db --local --file ./migrations/0001_create_worksheets.sql
 ```
 
 Verify local D1 tables:
 
 ```bash
-npx wrangler d1 execute flightdeck-db --local --command "SELECT name FROM sqlite_master WHERE type='table';"
+npx wrangler d1 execute press-api-db --local --command "SELECT name FROM sqlite_master WHERE type='table';"
 ```
 
 ## Project structure
 
 ```text
-flightdeck-api
+press-api
 ├─ migrations
 │  └─ 0001_create_worksheets.sql
 ├─ public
@@ -378,6 +381,7 @@ flightdeck-api
 ├─ package.json
 ├─ tsconfig.json
 ├─ vitest.config.mts
+├─ worker-configuration.d.ts
 ├─ wrangler.jsonc
 └─ README.md
 ```
@@ -387,6 +391,7 @@ flightdeck-api
 ```bash
 npm run dev
 npm run deploy
+npm run types
 npm run typecheck
 npm test
 ```
@@ -407,7 +412,7 @@ release/* = final release preparation branches
 Current stable milestone:
 
 ```text
-v0.1.0 = demo-ready FlightDeck API release
+v0.1.0 = demo-ready Press API release
 ```
 
 Completed:
@@ -433,4 +438,4 @@ Planned:
 - More detailed worksheet history retrieval
 - Optional per-question persistence
 - Deployment documentation
-- PararePilot integration
+- Commonplace integration

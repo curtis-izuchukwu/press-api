@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import worker, { type Env } from "../src/index";
+import worker from "../src/index";
 import type { WorksheetResponse } from "../src/schemas/generate";
 
 type ErrorResponse = {
@@ -43,7 +43,7 @@ const mockEnv = {
     })
   },
 
-  FLIGHTDECK_CACHE: {
+  PRESS_API_CACHE: {
     get: async (key: string) => {
       const value = cacheStore.get(key);
       return value ? JSON.parse(value) : null;
@@ -71,10 +71,15 @@ const mockEnv = {
         meta: {}
       })
     })
+  },
+
+  ASSETS: {
+    fetch: async (request: Request) =>
+      new Response(`asset:${new URL(request.url).pathname}`)
   }
 } as unknown as Env;
 
-describe("FlightDeck API", () => {
+describe("Press API", () => {
   it("returns health status", async () => {
     const request = new Request("http://example.com/health", {
       method: "GET"
@@ -86,7 +91,7 @@ describe("FlightDeck API", () => {
     expect(response.status).toBe(200);
     expect(body).toEqual({
       status: "ok",
-      service: "FlightDeck API",
+      service: "Press API",
       version: "0.1.0"
     });
   });
@@ -102,8 +107,19 @@ describe("FlightDeck API", () => {
     expect(response.status).toBe(404);
     expect(body).toEqual({
       error: "Not Found",
-      message: "FlightDeck API route not found"
+      message: "Press API route not found"
     });
+  });
+
+  it("serves the app icon assets", async () => {
+    const request = new Request("http://example.com/favicon.ico", {
+      method: "GET"
+    });
+
+    const response = await worker.fetch(request, mockEnv);
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("asset:/favicon.ico");
   });
 
   it("generates a worksheet response", async () => {
@@ -126,7 +142,7 @@ describe("FlightDeck API", () => {
     const body = (await response.json()) as WorksheetResponse;
 
     expect(response.status).toBe(200);
-    expect(body.metadata.service).toBe("FlightDeck API");
+    expect(body.metadata.service).toBe("Press API");
     expect(body.metadata.subject).toBe("Computer Science");
     expect(body.metadata.topic).toBe("Binary Search");
     expect(body.metadata.difficulty).toBe("medium");

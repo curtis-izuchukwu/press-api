@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "flightdeck-api",
+  "name": "press-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-01",
   "ai": {
@@ -9,14 +9,14 @@
   },
   "kv_namespaces": [
     {
-      "binding": "FLIGHTDECK_CACHE",
+      "binding": "PRESS_API_CACHE",
       "id": "b1db41ec645b4457a296dbdb7d067b9b"
     }
   ],
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "flightdeck-db",
+      "database_name": "press-api-db",
       "database_id": "6e4deb4e-13e6-46ec-b43f-a513e6e64a5f"
     }
   ],

@@ -30,7 +30,7 @@ export type WorksheetQuestion = {
 
 export type WorksheetResponse = {
   metadata: {
-    service: "FlightDeck API";
+    service: "Press API";
     version: "0.1.0";
     subject: string;
     topic: string;

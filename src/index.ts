@@ -4,21 +4,6 @@ import {
   type WorksheetResponse
 } from "./schemas/generate";
 
-type WorkersAiTextResponse = {
-  response?: string;
-};
-
-type AiBinding = {
-  run(
-    model: string,
-    input: {
-      prompt: string;
-      max_tokens?: number;
-      temperature?: number;
-    }
-  ): Promise<WorkersAiTextResponse>;
-};
-
 type WorksheetHistoryRow = {
   id: string;
   subject: string;
@@ -61,21 +46,13 @@ async function handleHistory(request: Request, env: Env): Promise<Response> {
 
   return jsonResponse({
     metadata: {
-      service: "FlightDeck API",
+      service: "Press API",
       version: "0.1.0",
       count: result.results.length
     },
     worksheets: result.results
   });
 }
-
-export type Env = {
-  AI: AiBinding;
-  FLIGHTDECK_CACHE: KVNamespace;
-  DB: D1Database;
-  ASSETS: Fetcher;
-
-};
 
 function jsonResponse(body: unknown, status = 200): Response {
   return Response.json(body, {
@@ -90,7 +67,7 @@ function notFound(): Response {
   return jsonResponse(
     {
       error: "Not Found",
-      message: "FlightDeck API route not found"
+      message: "Press API route not found"
     },
     404
   );
@@ -482,7 +459,7 @@ async function checkRateLimit(
   const now = Date.now();
   const resetAt = now + options.windowSeconds * 1000;
 
-  const existingState = await env.FLIGHTDECK_CACHE.get<RateLimitState>(
+  const existingState = await env.PRESS_API_CACHE.get<RateLimitState>(
     options.key,
     "json"
   );
@@ -493,7 +470,7 @@ async function checkRateLimit(
       resetAt
     };
 
-    await env.FLIGHTDECK_CACHE.put(options.key, JSON.stringify(newState), {
+    await env.PRESS_API_CACHE.put(options.key, JSON.stringify(newState), {
       expirationTtl: options.windowSeconds
     });
 
@@ -523,7 +500,7 @@ async function checkRateLimit(
     (existingState.resetAt - now) / 1000
   );
 
-  await env.FLIGHTDECK_CACHE.put(options.key, JSON.stringify(updatedState), {
+  await env.PRESS_API_CACHE.put(options.key, JSON.stringify(updatedState), {
     expirationTtl: Math.max(60, remainingWindowSeconds)
   });
 
@@ -621,7 +598,7 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
     version: "0.1.0"
   });
 
-  const cachedResponse = (await env.FLIGHTDECK_CACHE.get(
+  const cachedResponse = (await env.PRESS_API_CACHE.get(
     cacheKey,
     "json"
   )) as WorksheetResponse | null;
@@ -685,7 +662,7 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
 
   const response: WorksheetResponse = {
     metadata: {
-      service: "FlightDeck API",
+      service: "Press API",
       version: "0.1.0",
       subject,
       topic,
@@ -701,7 +678,7 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
   };
 
   if (mode !== "static") {
-    await env.FLIGHTDECK_CACHE.put(cacheKey, JSON.stringify(response), {
+    await env.PRESS_API_CACHE.put(cacheKey, JSON.stringify(response), {
       expirationTtl: 60 * 60
     });
   }
@@ -726,7 +703,7 @@ export default {
 
       return jsonResponse({
         status: "ok",
-        service: "FlightDeck API",
+        service: "Press API",
         version: "0.1.0"
       });
     }
@@ -741,11 +718,24 @@ export default {
 
     if (
       request.method === "GET" &&
-      ["/", "/index.html", "/styles.css", "/app.js"].includes(url.pathname)
+      [
+        "/",
+        "/index.html",
+        "/styles.css",
+        "/app.js",
+        "/favicon.ico",
+        "/favicon-32x32.png",
+        "/favicon-48x48.png",
+        "/apple-touch-icon.png",
+        "/icon-192x192.png",
+        "/icon-512x512.png",
+        "/press-icon.png",
+        "/site.webmanifest"
+      ].includes(url.pathname)
     ) {
       return env.ASSETS.fetch(request);
     }
 
     return notFound();
   }
-};
+} satisfies ExportedHandler<Env>;
