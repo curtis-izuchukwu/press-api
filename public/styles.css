@@ -19,6 +19,9 @@
   --color-border: rgba(243, 235, 221, 0.11);
   --color-border-strong: rgba(243, 235, 221, 0.2);
   --color-focus: rgba(184, 146, 88, 0.28);
+  --radius-small: 5px;
+  --radius-medium: 7px;
+  --radius-large: 10px;
   --shadow-panel: 0 18px 54px rgba(0, 0, 0, 0.22);
 }
 
@@ -88,7 +91,7 @@ a {
 button {
   min-height: 42px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   cursor: pointer;
   font-weight: 650;
 }
@@ -122,16 +125,11 @@ a {
 }
 
 .brand-mark {
-  display: grid;
+  display: block;
   width: 36px;
   height: 36px;
-  place-items: center;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 10px;
-  background: rgba(32, 37, 31, 0.72);
-  color: var(--color-brass-light);
-  font-size: 0.76rem;
-  font-weight: 820;
+  border-radius: var(--radius-medium);
+  object-fit: cover;
 }
 
 .brand-title {
@@ -153,7 +151,7 @@ a {
 
 .topnav a {
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--radius-small);
   color: var(--color-muted-text);
   font-size: 0.86rem;
   padding: 8px 10px;
@@ -240,7 +238,7 @@ h2 {
 
 .panel {
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border-radius: var(--radius-large);
   background:
     linear-gradient(180deg, rgba(34, 40, 35, 0.94), rgba(29, 34, 30, 0.98));
   box-shadow: var(--shadow-panel);
@@ -285,7 +283,7 @@ select {
   width: 100%;
   min-height: 44px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   background: var(--color-graphite-soft);
   color: var(--color-ivory);
   font-weight: 430;
@@ -367,7 +365,7 @@ select:focus-visible {
   min-height: 40px;
   margin-bottom: 10px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   background: rgba(15, 17, 16, 0.26);
   color: var(--color-warm-paper);
   padding: 9px 11px;
@@ -428,7 +426,7 @@ select:focus-visible {
 .meta-chip,
 .badge {
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius-small);
   background: rgba(15, 17, 16, 0.26);
   color: var(--color-warm-paper);
   font-family:
@@ -498,7 +496,7 @@ select:focus-visible {
 .question-card,
 .history-card {
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   background: rgba(15, 17, 16, 0.24);
   padding: 15px;
 }
@@ -535,7 +533,7 @@ select:focus-visible {
   min-height: 150px;
   align-content: center;
   border: 1px dashed var(--color-border-strong);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   background: rgba(15, 17, 16, 0.2);
   color: var(--color-dim-text);
   padding: 16px;
@@ -549,7 +547,7 @@ select:focus-visible {
 .error-box {
   margin-bottom: 12px;
   border: 1px solid rgba(91, 31, 42, 0.86);
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   background: rgba(91, 31, 42, 0.28);
   color: #f1c6cc;
   padding: 12px;

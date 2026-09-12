@@ -1,0 +1,21 @@
+{
+  "name": "Press API",
+  "short_name": "Press API",
+  "description": "Generate structured undergraduate revision worksheets.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#151815",
+  "theme_color": "#151815",
+  "icons": [
+    {
+      "src": "/icon-192x192.png?v=2",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png?v=2",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
