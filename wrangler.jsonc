@@ -10,14 +10,14 @@
   "kv_namespaces": [
     {
       "binding": "FLIGHTDECK_CACHE",
-      "id": "YOUR_KV_NAMESPACE_ID"
+      "id": "b1db41ec645b4457a296dbdb7d067b9b"
     }
   ],
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "flightdeck-db",
-      "database_id": "YOUR_D1_DATABASE_ID"
+      "database_id": "6e4deb4e-13e6-46ec-b43f-a513e6e64a5f"
     }
   ],
   "assets": {
