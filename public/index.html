@@ -4,21 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="application-name" content="Press API" />
-    <meta name="theme-color" content="#151815" />
-    <title>Press API Demo</title>
+    <meta name="theme-color" content="#111411" />
+    <title>Press API Workbench</title>
     <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/favicon-32x32.png?v=2"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="48x48"
-      href="/favicon-48x48.png?v=2"
-    />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=2" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
     <link rel="manifest" href="/site.webmanifest?v=2" />
     <link rel="stylesheet" href="/styles.css" />
@@ -31,16 +21,15 @@
             class="brand-mark"
             src="/icon-192x192.png?v=2"
             alt=""
-            width="36"
-            height="36"
+            width="34"
+            height="34"
           />
-          <span>
-            <span class="brand-title">Press API</span>
-          </span>
+          <span class="brand-title">Press API</span>
         </a>
 
         <nav class="topnav" aria-label="Workspace navigation">
           <a href="#create-title">Workbench</a>
+          <a href="#exchange-title">Exchange</a>
           <a href="#endpoint-title">Endpoint</a>
           <a href="#history-title">History</a>
         </nav>
@@ -57,161 +46,230 @@
       <div class="workbench-grid">
         <div class="main-column">
           <section class="panel form-panel" aria-labelledby="create-title">
-            <div class="panel-header">
+            <div class="panel-header form-panel-header">
               <div>
-                <p class="eyebrow">POST /generate</p>
+                <p class="eyebrow"><span>POST</span> /generate</p>
                 <h2 id="create-title">Create a worksheet</h2>
                 <p class="panel-note">
-                  Choose the study inputs for the next generation.
+                  Configure the request, then generate a structured worksheet.
                 </p>
               </div>
+              <span class="request-state" id="request-state">Ready</span>
             </div>
 
-            <form id="generate-form" class="form-grid">
-              <label>
-                Subject
-                <input
-                  id="subject"
-                  name="subject"
-                  type="text"
-                  value="Computer Science"
-                  required
-                />
-              </label>
+            <form id="generate-form" novalidate>
+              <div class="form-fields form-fields-primary">
+                <label class="field">
+                  <span class="field-label">Subject</span>
+                  <input
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    value="Computer Science"
+                    maxlength="80"
+                    aria-describedby="subject-help subject-error"
+                    autocomplete="off"
+                    required
+                  />
+                  <span class="field-help" id="subject-help">Required · 80 characters maximum</span>
+                  <span class="field-error" id="subject-error" aria-live="polite"></span>
+                </label>
 
-              <label>
-                Topic
-                <input
-                  id="topic"
-                  name="topic"
-                  type="text"
-                  value="Binary Search"
-                  required
-                />
-              </label>
+                <label class="field">
+                  <span class="field-label">Topic</span>
+                  <input
+                    id="topic"
+                    name="topic"
+                    type="text"
+                    value="Binary Search"
+                    maxlength="120"
+                    aria-describedby="topic-help topic-error"
+                    autocomplete="off"
+                    required
+                  />
+                  <span class="field-help" id="topic-help">Required · 120 characters maximum</span>
+                  <span class="field-error" id="topic-error" aria-live="polite"></span>
+                </label>
+              </div>
 
-              <label>
-                Difficulty
-                <select id="difficulty" name="difficulty">
-                  <option value="easy">Easy</option>
-                  <option value="medium" selected>Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </label>
+              <fieldset class="form-options">
+                <legend>Generation settings</legend>
+                <div class="form-fields form-fields-options">
+                  <label class="field">
+                    <span class="field-label">Difficulty</span>
+                    <select id="difficulty" name="difficulty">
+                      <option value="easy">Easy</option>
+                      <option value="medium" selected>Medium</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                  </label>
 
-              <label>
-                Question count
-                <input
-                  id="questionCount"
-                  name="questionCount"
-                  type="number"
-                  value="3"
-                  min="1"
-                  max="10"
-                  required
-                />
-              </label>
+                  <label class="field">
+                    <span class="field-label">Question count</span>
+                    <input
+                      id="questionCount"
+                      name="questionCount"
+                      type="number"
+                      value="3"
+                      min="1"
+                      max="10"
+                      step="1"
+                      inputmode="numeric"
+                      aria-describedby="question-count-help questionCount-error"
+                      required
+                    />
+                    <span class="field-help" id="question-count-help">1–10 questions</span>
+                    <span class="field-error" id="questionCount-error" aria-live="polite"></span>
+                  </label>
 
-              <label>
-                Format
-                <select id="format" name="format">
-                  <option value="short-answer" selected>Short answer</option>
-                  <option value="long-answer">Long answer</option>
-                </select>
-              </label>
+                  <label class="field">
+                    <span class="field-label">Format</span>
+                    <select id="format" name="format">
+                      <option value="short-answer" selected>Short answer</option>
+                      <option value="long-answer">Long answer</option>
+                    </select>
+                  </label>
+                </div>
+              </fieldset>
 
-              <button class="primary-button" type="submit">
-                Generate worksheet
-              </button>
+              <div class="form-actions">
+                <p id="form-status" class="form-status" aria-live="polite"></p>
+                <button id="generate-button" class="primary-button" type="submit">
+                  <span class="button-indicator" aria-hidden="true"></span>
+                  <span id="generate-button-label">Generate worksheet</span>
+                </button>
+              </div>
             </form>
           </section>
 
           <section class="panel output-panel" aria-labelledby="output-title">
-            <div class="panel-header">
+            <div class="panel-header output-header">
               <div>
-                <p class="eyebrow">Response</p>
-                <h2 id="output-title">Worksheet output</h2>
+                <p class="eyebrow">Worksheet</p>
+                <h2 id="output-title">Generated output</h2>
               </div>
-              <div id="metadata" class="metadata"></div>
+              <div id="metadata" class="metadata" aria-label="Response metadata"></div>
             </div>
 
-            <div id="error-box" class="error-box hidden"></div>
-            <div id="questions" class="questions empty-state">
-              Submit the form to generate a worksheet.
+            <div id="error-box" class="error-box hidden" role="alert"></div>
+            <div id="questions" class="questions empty-state" aria-live="polite">
+              Submit the request to generate a worksheet.
             </div>
           </section>
         </div>
 
         <aside class="sidebar" aria-label="API utilities">
-          <section class="panel utility-card" aria-labelledby="status-title">
+          <section class="panel exchange-panel" aria-labelledby="exchange-title">
             <div class="utility-header">
-              <p class="eyebrow">Status</p>
-              <span id="version-text" class="meta-chip">v0.1.0</span>
-            </div>
-            <h2 id="status-title">System status</h2>
-            <div class="status-row" role="status" aria-live="polite">
-              <span class="status-dot" id="status-dot" aria-hidden="true"></span>
-              <span id="status-text">Checking API status...</span>
-            </div>
-            <p id="status-detail" class="fine-print">
-              Waiting for the health check response.
-            </p>
-            <dl class="metric-list">
               <div>
-                <dt>Last checked</dt>
-                <dd id="checked-text">Pending</dd>
+                <p class="eyebrow">Live exchange</p>
+                <h2 id="exchange-title">Request / response</h2>
               </div>
-              <div>
-                <dt>Latency</dt>
-                <dd id="latency-text">Pending</dd>
-              </div>
-            </dl>
-          </section>
+              <span id="exchange-state" class="exchange-state">Not sent</span>
+            </div>
 
-          <section class="panel utility-card" aria-labelledby="endpoint-title">
-            <p class="eyebrow">Endpoint</p>
-            <h2 id="endpoint-title">Generate worksheet</h2>
-            <dl class="endpoint-details">
-              <div>
-                <dt>Method</dt>
-                <dd><code>POST</code></dd>
+            <div class="exchange-block">
+              <div class="code-heading">
+                <span>Request</span>
+                <code><b>POST</b> /generate</code>
               </div>
-              <div>
-                <dt>Path</dt>
-                <dd><code>/generate</code></dd>
-              </div>
-              <div>
-                <dt>URL</dt>
-                <dd><code id="endpoint-value">/generate</code></dd>
-              </div>
-            </dl>
-            <div class="endpoint-actions">
-              <button id="copy-endpoint" class="secondary-button" type="button">
-                Copy URL
-              </button>
-              <button id="copy-curl" class="secondary-button" type="button">
-                Copy cURL
+              <pre class="code-preview" aria-label="Current request JSON"><code id="request-preview"></code></pre>
+              <button id="copy-request" class="text-button" type="button">
+                Copy request
               </button>
             </div>
-            <p class="fine-print">
-              Send JSON with subject, topic, difficulty, question count and
-              format.
-            </p>
+
+            <div class="exchange-block response-block">
+              <div class="code-heading">
+                <span>Response</span>
+                <code id="response-meta">Awaiting request</code>
+              </div>
+              <div id="response-placeholder" class="code-placeholder">
+                Response JSON will appear here after generation.
+              </div>
+              <details id="response-details" class="response-details hidden" open>
+                <summary>JSON response</summary>
+                <pre class="code-preview response-preview" aria-label="Latest response JSON"><code id="response-preview"></code></pre>
+              </details>
+              <button id="copy-response" class="text-button" type="button" disabled>
+                Copy response
+              </button>
+            </div>
           </section>
 
-          <section class="panel utility-card" aria-labelledby="history-title">
-            <div class="utility-header">
+          <section class="panel runtime-panel" aria-label="API runtime details">
+            <div class="utility-section" aria-labelledby="status-title">
+              <div class="utility-header compact-header">
+                <div>
+                  <p class="eyebrow">GET /health</p>
+                  <h2 id="status-title">System status</h2>
+                </div>
+                <button id="refresh-status" class="icon-button" type="button" aria-label="Refresh system status">
+                  Refresh
+                </button>
+              </div>
+              <div class="status-line" role="status" aria-live="polite">
+                <span class="status-dot" id="status-dot" aria-hidden="true"></span>
+                <strong id="status-text">Checking</strong>
+                <span id="status-detail">Contacting API</span>
+              </div>
+              <dl class="metric-list">
+                <div>
+                  <dt>Last checked</dt>
+                  <dd id="checked-text">Pending</dd>
+                </div>
+                <div>
+                  <dt>Latency</dt>
+                  <dd id="latency-text">—</dd>
+                </div>
+                <div>
+                  <dt>Version</dt>
+                  <dd id="version-text">—</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="utility-section endpoint-section" aria-labelledby="endpoint-title">
+              <p class="eyebrow">Endpoint</p>
+              <h2 id="endpoint-title">Generate worksheet</h2>
+              <dl class="endpoint-details">
+                <div>
+                  <dt>Method</dt>
+                  <dd><code class="method-code">POST</code></dd>
+                </div>
+                <div>
+                  <dt>Path</dt>
+                  <dd><code>/generate</code></dd>
+                </div>
+                <div>
+                  <dt>URL</dt>
+                  <dd><code id="endpoint-value">/generate</code></dd>
+                </div>
+              </dl>
+              <div class="endpoint-actions">
+                <button id="copy-endpoint" class="secondary-button" type="button">
+                  Copy URL
+                </button>
+                <button id="copy-curl" class="secondary-button" type="button">
+                  Copy cURL
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel history-panel" aria-labelledby="history-title">
+            <div class="utility-header compact-header">
               <div>
                 <p class="eyebrow">GET /history</p>
                 <h2 id="history-title">Recent generations</h2>
               </div>
-              <button id="history-button" class="secondary-button" type="button">
+              <button id="history-button" class="secondary-button compact-button" type="button">
                 Load
               </button>
             </div>
 
-            <div id="history" class="history empty-state compact-state">
-              Load history to view stored worksheet records.
+            <div id="history" class="history empty-state compact-state" aria-live="polite">
+              Load stored worksheet records.
             </div>
           </section>
         </aside>
