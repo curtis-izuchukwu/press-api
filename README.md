@@ -4,9 +4,13 @@
   <img src="./public/icon-192x192.png" alt="Press API icon" width="96" height="96" />
 </p>
 
-Press API is a demo-ready serverless REST API built with **Cloudflare Workers** and **TypeScript**. It generates structured undergraduate-level revision worksheets from study inputs such as subject, topic, difficulty, question count, and format.
+Press API is a serverless REST API built with **Cloudflare Workers** and **TypeScript**. It generates structured undergraduate-level revision worksheets from study inputs such as subject, topic, difficulty, question count, and format.
 
-The project is designed as a backend and will later support **Commonplace**, an adaptive study tracker.
+Press API currently supports **Commonplace** as its worksheet-generation engine. Commonplace can request generated questions from Press and bring them into its local worksheet workflow, while Press remains independently usable through its API and developer workbench.
+
+![Press API workbench showing worksheet request controls and a live request and response preview](./docs/press-api-workbench.png)
+
+[Open the live Press API workbench](https://press-api.izuchukwucur.workers.dev/)
 
 ## Current status
 
@@ -25,7 +29,8 @@ It currently supports:
 - Worksheet history endpoint
 - Rate limiting for generation requests
 - Automated tests with Vitest
-- Simple frontend demo served through the Worker
+- Developer workbench served through the Worker
+- Worksheet-generation support for Commonplace
 
 ## Tech stack
 
@@ -40,16 +45,17 @@ It currently supports:
 - REST API
 - HTML/CSS/JavaScript frontend
 
-## Frontend demo
+## Developer workbench
 
-Press API includes a simple frontend demo served from the Worker.
+Press API includes a focused developer workbench served from the Worker.
 
-The demo can:
+The workbench can:
 
 - Check API health
 - Generate worksheets from form inputs
 - Display generated questions, answers, marks, and mark schemes
 - Show metadata such as generation mode, cache status, academic level, and question count
+- Preview and copy the current request and latest response JSON
 - Load recent worksheet history from D1
 
 Local frontend URL:
@@ -429,7 +435,8 @@ Completed:
 - KV caching
 - D1 persistence
 - Rate limiting
-- Simple frontend demo
+- Developer workbench
+- Commonplace worksheet-generation support
 - Demo-ready release pass
 
 Planned:
@@ -438,4 +445,3 @@ Planned:
 - More detailed worksheet history retrieval
 - Optional per-question persistence
 - Deployment documentation
-- Commonplace integration

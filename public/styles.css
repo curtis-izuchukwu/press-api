@@ -814,6 +814,10 @@ select:focus-visible {
   margin: 0;
 }
 
+.endpoint-details dd {
+  min-width: 0;
+}
+
 .metric-list dt,
 .endpoint-details dt {
   color: var(--color-dim-text);
@@ -829,6 +833,11 @@ select:focus-visible {
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.endpoint-details code {
+  display: block;
+  max-width: 100%;
 }
 
 .endpoint-section h2 {

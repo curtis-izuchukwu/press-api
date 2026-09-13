@@ -531,7 +531,9 @@ copyResponseButton.addEventListener("click", () =>
   copyText(copyResponseButton, latestResponseText, "Copied", "Copy response")
 );
 
-endpointValue.textContent = `${window.location.origin}/generate`;
+const generateEndpoint = `${window.location.origin}/generate`;
+endpointValue.textContent = generateEndpoint;
+endpointValue.title = generateEndpoint;
 
 copyEndpointButton.addEventListener("click", () =>
   copyText(
