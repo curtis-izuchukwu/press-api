@@ -4,9 +4,9 @@
   <img src="./public/icon-192x192.png" alt="Press API icon" width="96" height="96" />
 </p>
 
-Press API is a serverless REST API built with **Cloudflare Workers** and **TypeScript**. It generates structured undergraduate-level revision worksheets from study inputs such as subject, topic, difficulty, question count, and format.
+Press API is a serverless REST API built with Cloudflare Workers and TypeScript. It generates structured undergraduate-level revision worksheets from study inputs such as subject, topic, difficulty, question count, and format.
 
-Press API currently supports **Commonplace** as its worksheet-generation engine. Commonplace can request generated questions from Press and bring them into its local worksheet workflow, while Press remains independently usable through its API and developer workbench.
+Press API currently supports Commonplace as its worksheet-generation engine. Commonplace can request generated questions from Press and bring them into its local worksheet workflow, while Press remains independently usable through its API and developer workbench.
 
 ![Press API workbench showing worksheet request controls and a live request and response preview](./docs/press-api-workbench.png)
 
@@ -14,7 +14,7 @@ Press API currently supports **Commonplace** as its worksheet-generation engine.
 
 ## Current status
 
-Press API is currently at **v0.1.0 demo-ready release**.
+Press API is currently at v0.1.0.
 
 It currently supports:
 
